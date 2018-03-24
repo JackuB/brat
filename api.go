@@ -5,10 +5,19 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func determineListenAddress() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		return "8080"
+	}
+	return port
+}
 
 func getIntFromQuery(r *http.Request, k string, d int) int {
 	t := r.URL.Query().Get(k)
@@ -17,6 +26,10 @@ func getIntFromQuery(r *http.Request, k string, d int) int {
 		value = d
 	}
 	return value
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Hello world")
 }
 
 func timeoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +87,8 @@ func invalidHeaderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	http.HandleFunc("/", helloHandler)
+
 	http.HandleFunc("/response/timeout", timeoutHandler)
 
 	http.HandleFunc("/response/redirects", redirectHandler)
@@ -86,5 +101,5 @@ func main() {
 
 	http.HandleFunc("/response/headers/invalid", invalidHeaderHandler)
 
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+determineListenAddress(), nil))
 }
